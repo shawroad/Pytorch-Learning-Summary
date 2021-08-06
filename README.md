@@ -16,5 +16,6 @@ torch.save(model.state_dict(), 'pytorch_model_new.bin', _use_new_zipfile_seriali
 ```
 
 ### 一些技巧的总结
-1. 在pytorch中实现k折交叉验证
+1. 在pytorch中借助sklearn实现k折交叉验证
+
 
