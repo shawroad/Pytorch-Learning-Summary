@@ -14,3 +14,7 @@ model = AutoModel.from_pretrained('./pytorch_model.bin', config=config)
 
 torch.save(model.state_dict(), 'pytorch_model_new.bin', _use_new_zipfile_serialization=False)
 ```
+
+### 一些技巧的总结
+1. 在pytorch中实现k折交叉验证
+
