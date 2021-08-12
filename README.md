@@ -71,3 +71,18 @@
     - flops通常代表的是浮点运算数，衡量的是算法或者模型的复杂度，计算量小代表计算过程中需要的计算空间较小。
     - 参数量就是指模型各个部分的参数数量之和，参数小指模型的参数少，比较轻量级
 
+
+3. CrossEntropyLoss和NLLLoss  
+    - 最常见的错误是损失函数和输出激活函数之间的不匹配。nn.CrossEntropyLoss中的损失模块执行两个操作：nn.LogSoftmax和nn.NLLLoss。因此nn.CrossEntropyLoss的输入应该是最后一个线性层的输出。不要在nn.CrossEntropyLossPyTorch之前应用Softmax。 否则将对Softmax输出计算log-softmax，将会降低模型精度。
+    
+    - 如果使用nn.NLLLoss模块，则需要自己应用log-softmax。nn.NLLLoss需要对数概率，而不是普通概率。因此确保应用nn.LogSoftmax 或者 nn.functional.log_softmax，而不是nn.Softmax。
+
+4. Softmax的计算维度  
+    注意Softmax的计算维度。通常是输出张量的最后一个维度，例如nn.Softmax(dim=-1)。如果混淆了维度，模型最终会得到随机预测。
+
+5. model.train()和model.eval()以及torch.no_grad()的区别  
+    1. model.train()的作用是使Batch Normalization、Dropout生效。Batch Normalization采用的时一个批次的均值方差，Dropout按照概率随机选取神经元连接。
+
+    2. model.eval()的作用是让Batch Normalization、Dropout无效。即:Batch Normalization使用全局的均值和方差，Dropout不丢弃神经元，使用全部的神经元。所以，model.eval()常用在模型进行验证或测试阶段。但是，这个模式不会影响梯度的计算(梯度照样计算)。
+    
+    3. torch.no_grad()则是停止梯度计算，以起到加速和节省显存的作用。但是，这个模式不会影响Normalization和Dropout。所以，通常是eval()和no_grad()搭配使用。
