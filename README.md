@@ -104,7 +104,7 @@
     最后再平均: (0.8167 + 0.6559) / 2 = 0.7363  
     
     使用代码验证:  
-    ```
+    ```python
     from torch import nn
     loss_fct = nn.BCELoss()
     input = torch.tensor([[0.3992, 0.2232, 0.6435],[0.3800, 0.3044, 0.3241]])
