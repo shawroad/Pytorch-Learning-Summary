@@ -86,3 +86,33 @@
     2. model.eval()的作用是让Batch Normalization、Dropout无效。即:Batch Normalization使用全局的均值和方差，Dropout不丢弃神经元，使用全部的神经元。所以，model.eval()常用在模型进行验证或测试阶段。但是，这个模式不会影响梯度的计算(梯度照样计算)。
     
     3. torch.no_grad()则是停止梯度计算，以起到加速和节省显存的作用。但是，这个模式不会影响Normalization和Dropout。所以，通常是eval()和no_grad()搭配使用。
+
+6. BCELoss和BCEWithLogitsLoss  
+    简而言之，BCEWithLogitsLoss = Sigmoid + BCELoss  
+    举个例子: 假设一个batch中有两个样本，预测的logits=[[0.3992, 0.2232, 0.6435],[0.3800, 0.3044, 0.3241]], 真实的label=[[0, 1, 1],[0, 0, 1]]  
+    
+    则BCELoss的计算如下:    
+    第一个样本:  
+    0 × In 0.3992 + (1-0) × In(1-0.3992) = -0.5095  
+    1 × In 0.2232 + (1-1) × In(1-0.2232) = -1.4997  
+    1 × In 0.6435 + (1-1) × In(1-0.6435) = -0.4408  
+    第二个样本:   
+    0 × In 0.3800 + (1−0) × In(1−0.3800) = −0.4780  
+    0 × In 0.3044 + (1−0) × In(1−0.3044) = −0.3630     
+    1 × In 0.3241 + (1−1) × In(1−0.3241) = −1.1267   
+    去掉符号对每个样本求均值: 第一个样本: (0.5095 + 1.4997 + 0.4408) / 3 = 0.8167； 第二个样本: (0.4780 + 0.3630 + 1.1267) / 3 = 0.6559  
+    最后再平均: (0.8167 + 0.6559) / 2 = 0.7363  
+    
+    使用代码验证:  
+    ```
+    from torch import nn
+    loss_fct = nn.BCELoss()
+    input = torch.tensor([[0.3992, 0.2232, 0.6435],[0.3800, 0.3044, 0.3241]])
+    label = torch.tensor([[0, 1, 1],[0, 0, 1]], dtype=torch.float)
+    loss = loss_fct(input, label)
+    print(loss)
+    # 0.7363
+    ```
+    
+    同理，可验证BCEWithLogitsLoss  
+    
