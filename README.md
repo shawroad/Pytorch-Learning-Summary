@@ -115,4 +115,7 @@
     ```
     
     同理，可验证BCEWithLogitsLoss  
-    
+7. 安装apex    
+    - git clone https://github.com/NVIDIA/apex
+    - cd apex
+    - python3 setup.py install
