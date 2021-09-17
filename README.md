@@ -116,6 +116,6 @@
     
     同理，可验证BCEWithLogitsLoss  
 7. 安装apex    
-    - git clone https://github.com/NVIDIA/apex
+    - git clone https://github.com/NVIDIA/apex.git
     - cd apex
     - python3 setup.py install
