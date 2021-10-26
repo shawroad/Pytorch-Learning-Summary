@@ -1,5 +1,21 @@
-# Pytorch-Learning-Summary
-### 一些报错的解决方案
+# 目录
+#### 一些错误的解决方案
+    1. 加载模型的权重时，有时会发现加载报错。显示当前模型是有这些参数的，但是你的权重没有这些参数。
+    2. 高版本的torch训练的模型用低版本的torch加载时，报错。
+#### 一些技巧的总结
+    1. 在pytorch中借助sklearn实现k折交叉验证
+    2. 计算模型的计算量和参数量
+    3. CrossEntropyLoss和NLLLoss
+    4. Softmax的计算维度 
+    5. model.train()和model.eval()以及torch.no_grad()的区别  
+    6. BCELoss和BCEWithLogitsLoss  
+    7. 安装apex  
+    8. focal loss的用法
+
+
+  
+# 正文部分
+## 一些报错的解决方案
 1. 加载模型的权重时，有时会发现加载报错。显示当前模型是有这些参数的，但是你的权重没有这些参数。这里只需要加一个参数: strict=False。
     ```python
     model.load_state_dict(torch.load('xxx.bin'), strict=False) 
@@ -15,7 +31,7 @@
     torch.save(model.state_dict(), 'pytorch_model_new.bin', _use_new_zipfile_serialization=False)
     ```
 
-### 一些技巧的总结
+## 一些技巧的总结
 1. 在pytorch中借助sklearn实现k折交叉验证
     ```python
         from sklearn.model_selection import StratifiedKFold
@@ -126,3 +142,88 @@
     - O2：“几乎FP16”混合精度训练，不存在黑白名单，除了Batch norm，几乎都是用FP16计算。
     - O3：纯FP16训练，很不稳定，但是可以作为speed的baseline；
 
+8. focal loss的用法
+    ```python
+    import torch
+    from torch import nn
+    import torch.nn.functional as F
+
+
+    class BCEFocalLoss(nn.Module):
+        # 可用于二分类和多标签分类
+        def __init__(self, gamma=2, alpha=0.25, reduction='mean'):
+            super(BCEFocalLoss, self).__init__()
+            self.gamma = gamma
+            self.alpha = alpha
+            self.reduction = reduction
+
+        def forward(self, logits, labels):
+            '''
+            假设是三个标签的多分类
+            loss_fct = BCEFocalLoss()
+            labels = torch.tensor([[0, 1, 1], [1, 0, 1]])
+            logits = torch.tensor([[0.3992, 0.2232, 0.6435],[0.3800, 0.3044, 0.3241]])
+            loss = loss_fct(logits, labels)
+            print(loss)  # tensor(0.0908)
+
+            '''
+            probs = torch.sigmoid(logits)
+
+            loss = -self.alpha * (1 - probs) ** self.gamma * labels * torch.log(probs) - (1 - self.alpha) * probs ** self.gamma * (1 - labels) * torch.log(1 - probs)
+
+            if self.reduction == 'mean':
+                loss = torch.mean(loss)
+            elif self.reduction == 'sum':
+                loss = torch.sum(loss)
+            return loss
+
+
+    class MultiCEFocalLoss(nn.Module):
+        # 可以用于多分类 (注: 不是多标签分类)
+        def __init__(self, class_num, gamma=2, alpha=None, reduction='mean'):
+            super(MultiCEFocalLoss, self).__init__()
+            if alpha is None:
+                self.alpha = torch.ones(class_num, 1)
+            else:
+                self.alpha = alpha
+            self.gamma = gamma
+            self.reduction = reduction
+            self.class_num = class_num
+
+        def forward(self, logits, labels):
+            '''
+            logits: (batch_size, class_num)
+            labels: (batch_size,)
+            '''
+            probs = F.softmax(logits, dim=1) 
+            class_mask = F.one_hot(labels, self.class_num)   # 将真实标签转为one-hot
+            ids = labels.view(-1, 1)   # (batch_size, 1)
+            alpha = self.alpha[ids.data.view(-1)]   # 每一类的权重因子
+
+            probs = (probs * class_mask).sum(1).view(-1, 1)
+            log_p = probs.log()
+
+            loss = -alpha * (torch.pow((1-probs), self.gamma)) * log_p
+
+            if self.reduction == 'mean':
+                loss = loss.mean()
+            elif self.reduction == 'sum':
+                loss = loss.sum()
+
+            return loss
+
+
+    if __name__ == '__main__':
+        # loss_fct = BCEFocalLoss()
+        # labels = torch.tensor([[0, 1, 1], [1, 0, 1]])
+        # logits = torch.tensor([[0.3992, 0.2232, 0.6435],[0.3800, 0.3044, 0.3241]])
+        # loss = loss_fct(logits, labels)
+        # print(loss)
+
+        # 举例四分类
+        loss_fct = MultiCEFocalLoss(class_num=4)
+        labels = torch.tensor([1, 3, 0, 0, 2])
+        logits = torch.randn(5, 4)
+        loss = loss_fct(logits, labels)
+        print(loss)
+    ```
