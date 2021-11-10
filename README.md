@@ -11,6 +11,7 @@
     6. BCELoss和BCEWithLogitsLoss  
     7. 安装apex  
     8. focal loss的用法
+    9. fasttext库的使用
 
 
   
@@ -226,4 +227,36 @@
         logits = torch.randn(5, 4)
         loss = loss_fct(logits, labels)
         print(loss)
+    ```
+    
+9. fasttext库的使用
+    ```python
+    import fasttext.FastText as fasttext
+    '''
+    安装fasttext   pip install fasttext
+    data.txt的数据   可以做多标签分类
+    __label__娱乐 __label__科技 你 是 我 的 小可爱 ， 滚犊子 吧。
+    __label__保险 你 是 我 的 小可爱 ， 滚犊子 吧。
+    __label__娱乐 __label__科技 你 是 我 的 小可爱 ， 滚犊子 吧。
+    '''
+    classifier = fasttext.train_supervised(
+       input='./data.txt',   # 训练集文件路径，中文需要进行分词
+       label="__label__",      # 标签前缀
+       lr=0.01,                # 学习率
+       dim=300,                # 词向量维度
+       ws=5,                   # 内容窗口大小
+       epoch=5,                # 训练轮数
+       loss="softmax",         # 使用的损失函数
+       minCount=2,             # 最小词频数
+       wordNgrams=4            # 词n-gram的长度
+    )
+
+    classifier.save_model('./checkpoint')
+
+    # # 预测的话
+    # classifier = fasttext.load_model('checkpoint')
+    # cut_text = 'i love you '
+    # predict_result = classifier.predict(cut_text, k=-1)
+    # print(predict_result)
+
     ```
