@@ -12,6 +12,7 @@
     7. 安装apex  
     8. focal loss的用法
     9. fasttext库的使用
+    10. flask采用post方式传输数据
 
 
   
@@ -259,4 +260,36 @@
     # predict_result = classifier.predict(cut_text, k=-1)
     # print(predict_result)
 
+    ```
+10. flask采用post方式传输数据
+    ```
+    # 服务代码
+    from flask import Flask, request, jsonify
+    
+    app = Flask(__name__)
+
+    @app.route('/predict', methods=['POST'])
+    def index():
+        name = ''
+        age = ''
+        if request.method == "POST":
+            name = request.form.get('name')
+            age = request.form.get('age')
+        return jsonify({'name': name, 'age': age})
+
+    if __name__ == '__main__':
+        app.run()
+
+
+    # 请求服务代码
+    '''
+    import requests
+
+    if __name__ == '__main__':
+        url_predict = 'http://127.0.0.1:5000/predict'
+        name = 'xl'
+        age = '21'
+        res = requests.post(url_predict, data={'name': name, 'age': age})
+        print(res.json())
+    '''
     ```
