@@ -13,6 +13,7 @@
     8. focal loss的用法
     9. fasttext库的使用
     10. flask采用post方式传输数据
+    11. flask采用get方式传输数据
 
 
   
@@ -290,6 +291,38 @@
         name = 'xl'
         age = '21'
         res = requests.post(url_predict, data={'name': name, 'age': age})
+        print(res.json())
+    '''
+    ```
+
+11. flask采用get方式传输数据
+    ```
+    # 服务代码
+    from flask import Flask, request, jsonify
+
+    app = Flask(__name__)
+
+
+    @app.route('/predict', methods=['GET'])
+    def index():
+        name = request.args.get('name')
+        age = request.args.get('age')
+        return jsonify({'name': name, 'age': age})
+
+
+    if __name__ == '__main__':
+        app.run()
+
+
+    # 请求服务代码
+    '''
+    import requests
+
+    if __name__ == '__main__':
+        name = 'xl'
+        age = '21'
+        url_predict = 'http://127.0.0.1:5000/predict?name={}&age={}'.format(name, age)
+        res = requests.get(url_predict)
         print(res.json())
     '''
     ```
